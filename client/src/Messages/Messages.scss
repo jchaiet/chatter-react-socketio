@@ -1,0 +1,134 @@
+.chat__input {
+  .chat__form {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1em;
+  }
+
+  .form__control {
+    border-radius: 15px;
+    padding: 1em;
+    font-size: 16px;
+    border: 3px solid #ccc;
+    min-width: 200px;
+    flex: 0.78;
+
+    &:focus {
+      border: 3px solid #333;
+      outline: none
+    }
+  }
+  
+  .form__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0.2;
+    background-color: #27ba7d;
+    border: none;
+    color: #fff;
+    padding: 1em;
+    text-decoration: none;
+    border-radius: 15px;
+    width: 100%;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    border: 3px solid #27ba7d;
+
+    &:disabled, &:disabled:hover {
+      background-color: #ccc;
+      color: #999;
+      border: 3px solid #ccc;
+      cursor: default;
+    }
+  
+    &:hover {
+      background-color: #1a7d54;
+      border: 3px solid #1a7d54;
+      transition: all 0.1s ease-in;
+    }
+  
+    &:focus {
+      outline: none;
+    }
+  }
+}
+
+.message__container--right {
+  display: flex;
+  justify-content: flex-end;
+  width: auto;
+  margin-bottom: 1.5em;
+  
+  &:last-of-type {
+    margin-bottom: 0;
+  }
+  
+  .message__time {
+    font-size: 16px;
+    margin: 0;
+    text-align: left;
+    color: #333;
+    padding-left: 0.5em;
+  }
+
+  .message__name {
+    font-size: 16px;
+    margin: 0;
+    text-align: right;
+    color: #333;
+    padding-right: 0.5em;
+  }
+
+  .message__content {
+    width: auto;
+    background-color: #fff;
+    padding: 0.5em 0.75em;
+    border-radius: 15px;
+    margin: 0 auto;
+  }
+}
+
+.message__container--left {
+  display: flex;
+  justify-content: flex-start;
+  width: auto;
+  margin-bottom: 1.5em;
+  
+  &:last-of-type {
+    margin-bottom: 0;
+  }
+  
+  .message__time {
+    font-size: 16px;
+    margin: 0;
+    text-align: right;
+    color: #333;
+    padding-right: 0.5em;
+  }
+
+  .message__name {
+    font-size: 16px;
+    margin: 0;
+    text-align: left;
+    color: #333;
+    padding-left: 0.5em;
+  }
+
+  .message__content {
+    width: auto;
+    background-color: var(--light-blue);
+    color: #fff;
+    padding: 0.5em 0.75em;
+    border-radius: 15px;
+    margin: 0 auto;
+  }
+}
+
+.thread__content {
+  padding: 1em;
+  height: 70vh;
+  overflow-y: auto;
+}

@@ -1,13 +1,80 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* Fonts */
+@font-face {
+  font-family: "Poppins-Light";
+  src: url("./assets/fonts/poppins/Poppins-Light.otf") format("opentype"); 
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+@font-face {
+  font-family: "Poppins-Reg";
+  src: url("./assets/fonts/poppins/Poppins-Regular.otf") format("opentype"); 
+}
+
+@font-face {
+  font-family: "Poppins-Medium";
+  src: url("./assets/fonts/poppins/Poppins-Medium.otf") format("opentype"); 
+}
+
+@font-face {
+  font-family: "Poppins-Semi";
+  src: url("./assets/fonts/poppins/Poppins-SemiBold.otf") format("opentype"); 
+}
+
+@font-face {
+  font-family: "Poppins-Bold";
+  src: url("./assets/fonts/poppins/Poppins-Bold.otf") format("opentype"); 
+}
+
+:root {
+  --primary-color: #333333;
+  --secondary-color: #999999;
+  --highlight: #B4E55C;
+  --overlay-color: rgba(0, 0, 0, 0.8);
+  --blue: rgb(25, 68, 89); 
+  --dark-blue: rgb(19, 44, 56);
+  --light-blue: rgb(55, 103, 128);
+
+  --red: rgb(239, 89, 57);
+  --dark-red: rgb(186, 52, 22); 
+  --green: rgb(17, 201, 59);
+  --dark-green: rgb(15,128,41);
+  --grey: #abb0b3;
+  --light-grey: #e3e9ee;
+  --dark-grey: #7c8082;
+  --background-grey: rgb(240, 240, 240);
+  --white: #ffffff;
+}
+
+html {
+  font-family: sans-serif;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  position: relative;
+  height: 100%;
+  font-size: 16px;
+}
+
+body {
+  font-family: "Poppins-Light"; 
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #F0F0F0;
+  font-weight: 100;
+  line-height: 1.6;
+  color: #333;
+  font-size: 1.1rem;
+  margin: 0;
+  height: 100%;
+}
+
+#root, .container {
+  height: 100%;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Poppins-Medium';
+  line-height: 1.3;
+}
+
+button:focus {
+  outline: none;
 }
