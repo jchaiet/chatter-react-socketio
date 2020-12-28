@@ -26,7 +26,6 @@ export default function DashboardView(props) {
     let newChats = chats.map(chat => {
       if(chat.id === chatId) {
         chat.messages.push(message);
-        console.log('found', chat);
       }
       return chat;
     });
@@ -50,27 +49,47 @@ export default function DashboardView(props) {
     setActiveChat(reset ? chat : activeChat);
 
     const messageEvent = `${MESSAGE_RECEIVED}-${chat.id}` //MESSAGE_RECEIVED-asdfjksnfsdf-sdfsfjksdf
-    //const typingEvent = `${TYPING}-${chat.id}`;
+    const typingEvent = `${TYPING}-${chat.id}`;
     
     socket.on(messageEvent, (message) => handleAddMessageToChat(newChats, chat.id, message));
-    //socket.on(typingEvent)
+    socket.on(typingEvent, ({isTyping, sender}) => updateTypingInChat(newChats, chat.id, isTyping, sender))
   };
 
-  /*
-  *  Reset the chat to new incoming messages only
-  *  @param chat {Chat} 
+  /**
+   * Reset the chat to new incoming messages only
+   * @param chat {Chat} 
   */
   function handleResetChat(chat) {
     return handleAddChat(chat, true);
   };
+
+  /**
+   * Updates the typing in the specified chat
+   * @param {string} chatId 
+  */
+  const updateTypingInChat = (chats, chatId, isTyping, sender) => {
+    if(sender !== user.username){
+      let newChats = chats.map(chat => {
+        if(chat.id === chatId) {
+          if(isTyping && !chat.typingUsers.includes(sender)){
+            chat.typingUsers.push(sender);
+          }else if(!isTyping && chat.typingUsers.includes(sender)){
+            chat.typingUsers = chat.typingUsers.filter(u => u !== sender)
+          }
+        }
+        return chat;
+      });
+      setChats(newChats);      
+    }
+  }
 
   /*
   *  Adds a message to the specified chat
   *  @param chatId {number} The id of the chat to be added to
   *  @param message {string} The message to be added to the chat
   */
-  function handleSendMessage (chatId, message,) { 
-    let sender = user.username 
+  function handleSendMessage (chatId, message) { 
+    let sender = user.username;
     socket.emit(MESSAGE_SENT, {chatId, message, sender});
   };
 
@@ -80,7 +99,8 @@ export default function DashboardView(props) {
   *  @param typing {boolean} If user is typing
   */
   const handleSendTyping = (chatId, isTyping) => {
-    socket.emit(TYPING, {chatId, isTyping})
+    let sender = user.username;
+    socket.emit(TYPING, {chatId, isTyping, sender});
   }
 
   useEffect(() => {
@@ -105,10 +125,22 @@ export default function DashboardView(props) {
           <div className="chat__room">
             <ChatHeading name={activeChat.name} />
             <Messages 
-              messages={activeChat.messages} 
+              messages={activeChat.messages.reverse()} 
               user={user}
               typingUsers={activeChat.typingUsers}
             />
+
+            { activeChat.typingUsers && 
+              activeChat.typingUsers.map((name) => {
+                return(
+                  <div key={name} className="message__typing-user">
+                    {`${name} is typing...`}
+                  </div>
+                )
+              })
+
+            }
+            
             <MessageInput
               handleSendMessage={message => handleSendMessage(activeChat.id, message)}
               handleSendTyping={isTyping => handleSendTyping(activeChat.id, isTyping)}

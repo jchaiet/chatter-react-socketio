@@ -1,15 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 import './Messages.scss';
 
 const MessageInput = (props) => {
-  const { handleSendMessage } = props;
+  const { handleSendMessage, handleSendTyping } = props;
 
   const [message, setMessage] = useState('');
-  //const [isTyping, setIsTyping] = useState(false); 
+  const [isTyping, setIsTyping] = useState(false); 
 
-  const handleSendTyping = () => {
-    console.log('typing')
+  const typingIntervalRef = useRef();
+  const lastUpdateTime = useRef();
+
+  useEffect(() => {
+    return () => {
+      stopCheckingTyping();
+    }
+  }, []);
+
+  const sendTyping = () => {
+    lastUpdateTime.current = Date.now();
+    if(!isTyping){
+      setIsTyping(true);
+      handleSendTyping(true);
+      startIsTypingCheck();
+    }
+  }
+
+  /**
+   * startIsTypingCheck
+   * Start an interval that checks if user is typing
+  */
+  const startIsTypingCheck = () => {
+    typingIntervalRef.current = setInterval(() => {
+      if((Date.now() - lastUpdateTime.current) > 300){
+        setIsTyping(false);
+        stopCheckingTyping();
+      }
+    }, 300)
+  }
+
+  /**
+   * stopIsTypingCheck
+   * Start the interval from checking if user is typing
+  */
+  const stopCheckingTyping = () => {
+    if(typingIntervalRef.current){
+      clearInterval(typingIntervalRef.current);
+      handleSendTyping(false);
+    }
   }
 
   const handleSubmit = (event) => {
@@ -31,7 +69,7 @@ const MessageInput = (props) => {
           value={message}
           autoComplete='off'
           placeholder="Type something..."
-          onKeyUp={e => {e.key !== 13 && handleSendTyping()}}
+          onKeyUp={e => {e.key !== 13 && sendTyping()}}
           onChange={({target}) => setMessage(target.value)}
         />
         <button

@@ -1,8 +1,18 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 
 const Messages = (props) => {
   const { messages, user, typingUsers } = props;
+  const messagesEndRef = useRef(null);
 
+  const scrollToBottom = () =>{
+    messagesEndRef.current.scrollIntoView({behavior: 'smooth'});
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages.length]);
+
+  console.log(typingUsers)
   return (
     <div className="thread__container">
       <div className="thread__content">
@@ -21,18 +31,8 @@ const Messages = (props) => {
               </div>
             )
           })
-        }
-
-        {typingUsers && 
-          typingUsers.map((name) => {
-            return(
-              <div key={name} className="message__typing-user">
-                {`${name} is typing...`}
-              </div>
-            )
-          })
-
-        }
+        }        
+        <div ref={messagesEndRef} />
       </div>
     </div>
   )

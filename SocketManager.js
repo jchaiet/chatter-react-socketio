@@ -8,6 +8,7 @@ const COMMUNITY_CHAT = "COMMUNITY_CHAT";
 const LOGOUT = "LOGOUT";
 const MESSAGE_SENT = "MESSAGE_SENT";
 const MESSAGE_RECEIVED = "MESSAGE_RECEIVED";
+const TYPING = "TYPING";
 
 let connectedUsers = {};
 
@@ -57,6 +58,11 @@ module.exports = function(socket){
     sendMessageToChat(chatId, message, sender);
   })
 
+  //When a user is typing
+  socket.on(TYPING, ({chatId, isTyping, sender}) => {
+    sendTypingToChat(chatId, isTyping, sender);
+  })
+
   //User logout
   socket.on(LOGOUT, () => {
     connectedUsers = removeUser(connectedUsers, socket.user.username);
@@ -66,11 +72,21 @@ module.exports = function(socket){
   });
 }
 
-/*
-* Returns a function that will take a chat id and message
-* then emit a broadcast to the chat id
-* @param sender {string} username of sender 
-* @return function(chatId, message) 
+/**
+ * Returns a function that will take a chat id and a boolean isTyping
+ * and then emit a broadcast to the chat where the user is typing
+ * @param {string} sender 
+ * @return function(chatId, message)
+*/
+function sendTypingToChat(chatId, isTyping, sender){
+  io.emit(`${TYPING}-${chatId}`, {isTyping, sender});
+}
+
+/**
+ * Returns a function that will take a chat id and message
+ * then emit a broadcast to the chat id
+ * @param {string} sender username of sender
+ * @return function(chatId, message)
 */
 function sendMessageToChat(chatId, message, sender){
   io.emit(`${MESSAGE_RECEIVED}-${chatId}`, createMessage({message, sender}));
