@@ -22,11 +22,15 @@ const Messages = (props) => {
               <div
                 key={mes.id}
                 className={`message__container ${mes.sender === user.username ? 'message__container--right' : 'message__container--left'}`}
+                style={{marginBottom: i == messages.length - 1 ?  0 : '1em'}}
+
               >
                 <div className="message__data">
                   <div className="message__time">{mes.time}</div>
                   <div className="message__content">{mes.message}</div>
-                  <div className="message__name">{mes.sender}</div>
+                  {mes.sender !== user.username && 
+                    <div className="message__name">{mes.sender}</div>
+                  }
                 </div>
               </div>
             )

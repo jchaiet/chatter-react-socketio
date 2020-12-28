@@ -129,22 +129,22 @@ export default function DashboardView(props) {
               user={user}
               typingUsers={activeChat.typingUsers}
             />
-
-            { activeChat.typingUsers && 
-              activeChat.typingUsers.map((name) => {
-                return(
-                  <div key={name} className="message__typing-user">
-                    {`${name} is typing...`}
-                  </div>
-                )
-              })
-
-            }
             
+            <div  className="message__typing-user">
+              { activeChat.typingUsers && 
+                activeChat.typingUsers.map((name) => {
+                  return(
+                    <p key={name} >{`${name} is typing...`}</p>
+                  )
+                })
+
+              }
+            </div>
+
             <MessageInput
               handleSendMessage={message => handleSendMessage(activeChat.id, message)}
               handleSendTyping={isTyping => handleSendTyping(activeChat.id, isTyping)}
-          />
+            />
           </div>
         :
           <p>Select a chat</p>
