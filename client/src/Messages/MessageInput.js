@@ -15,6 +15,7 @@ const MessageInput = (props) => {
     return () => {
       stopCheckingTyping();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const sendTyping = () => {

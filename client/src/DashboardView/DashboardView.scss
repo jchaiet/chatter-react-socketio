@@ -168,6 +168,11 @@
   letter-spacing: 0.5px;
   cursor: pointer;
 
+  &.active {
+    background-color: #F0F0F0;
+    color: #333;
+  }
+
   &:last-of-type {
     border: none;
   }

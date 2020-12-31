@@ -1,21 +1,42 @@
-import React, { useState } from 'react'
-import useChat from '../hooks/useChat';
+import React, { useState, useEffect } from 'react'
+import socketIOClient from 'socket.io-client';
 
 import DashboardView from '../DashboardView/DashboardView';
 import LoginView from '../LoginView/LoginView';
 
+import {
+  LOGOUT
+} from '../Events';
+
 import './Layout.scss';
 
 export default function Layout() {
-  const { socket, logoutUser } = useChat();
   const [user, setUser] = useState(null);
+  const [socket, setSocket] = useState(null);
+
+  const SOCKET_SERVER_URL = 'http://localhost:5000';
+
+  useEffect(() => {
+    //Create Websocket connection
+    const newSocket = socketIOClient(SOCKET_SERVER_URL, {
+      transports: ['websocket', 'flashsocket', 'htmlfile', 'xhr-polling', 'jsonp-polling', 'polling'],
+      cors: '*'
+    });
+    
+    setSocket(newSocket);
+   
+    return () => {
+      //socketRef.current.disconnect();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleSetUser = (user) => {
     setUser(user)
   }
 
   const handleLogout = (user) => {
-    logoutUser(user);
+    socket.emit(LOGOUT, user);
     setUser(null);
   }
 
@@ -23,8 +44,8 @@ export default function Layout() {
     <div className="layout__container">
       {user ?
         <DashboardView
-          socket={socket}
           user={user}
+          socket={socket}
           handleLogout={handleLogout}
         />
       :

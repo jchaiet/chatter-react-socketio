@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import { 
   FiMoreVertical, 
@@ -11,7 +11,15 @@ import {
 import './DashboardView.scss';
 
 const Sidebar = (props) => {
-  const { handleLogout, chats, user, activeChat, setActiveChat } = props;
+  const { handleLogout, chats, user, activeChat, setActiveChat, onSendPrivateMessage } = props;
+
+  const [receiver, setReceiver] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSendPrivateMessage(receiver);
+    setReceiver('');
+  }
 
   return (
     <div className="chats__sidebar">
@@ -26,27 +34,32 @@ const Sidebar = (props) => {
         </div>
       </div>
 
-      <div className="chats__add-chat add-chat">
-        <div className="add-chat__input">
-          <FiSearch />
-          <input
-            placeholder="Chat name..."
-            type='text'
-          />
-        </div>
+      <div>
+        <form onSubmit={handleSubmit} className=" chats__add-chat add-chat">
+          <div className="add-chat__input">
+            <FiSearch />
+            <input
+              placeholder="Chat name..."
+              type='text'
+              onChange={(e) => setReceiver(e.target.value)}
+              value={receiver}
+            />
+          </div>
+          <button type="submit" className="add-chat__btn">
+            <FiPlus />
+          </button>
+        </form>
 
-        <button className="add-chat__btn">
-          <FiPlus />
-        </button>
+        
       </div>
 
       <div className="chats__content">
         {chats && chats.map((chat) => {
           if(chat.name){
             const lastMessage = chat.messages[chat.messages.length - 1];
-            const user = chat.users.find(({username}) => {
-              return user.username !== username
-            }) || {name: 'Community'}
+            const chatName = chat.users.find((username) => {
+              return username !== user.username
+            }) || 'Community'
             const classNames = (activeChat && activeChat.id === chat.id ? 'active' : '');
 
             return (
@@ -55,9 +68,9 @@ const Sidebar = (props) => {
                 className={`chat__item ${classNames}`}
                 onClick={() => setActiveChat(chat)}
               >
-                <div className="chat__photo">{user.name[0]}</div>
+                <div className="chat__photo">{chatName[0]}</div>
                 <div className="chat__info">
-                  <p>{user.name}</p>
+                  <p>{chatName}</p>
                   <div className="chat__last-message">
                     {lastMessage ?
                       <p>{lastMessage.message}</p>

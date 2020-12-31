@@ -9,6 +9,8 @@ const LOGOUT = "LOGOUT";
 const MESSAGE_SENT = "MESSAGE_SENT";
 const MESSAGE_RECEIVED = "MESSAGE_RECEIVED";
 const TYPING = "TYPING";
+const PRIVATE_MESSAGE = "PRIVATE_MESSAGE"
+const UPDATE_CHAT = "UPDATE_CHAT";
 
 let connectedUsers = {};
 
@@ -24,12 +26,14 @@ module.exports = function(socket){
     if(isUser(connectedUsers, username)){
       callback({isUser: true, user: null});
     }else{
-      callback({isUser: false, user: createUser(username)})
+      callback({isUser: false, user: createUser(username, socket.id)})
     }
   });
 
   //User connects with username
   socket.on(USER_CONNECTED, (user) => {
+    user.socketId = socket.id;
+
     connectedUsers = addUser(connectedUsers, user);
     socket.user = user;
     sendMessageToChatFromUser = sendMessageToChat(socket.user.username);
@@ -38,20 +42,39 @@ module.exports = function(socket){
     console.log(connectedUsers);
   });
 
-  //User disconnects
-  /*socket.on('disconnect', () => {
-    if("user" in socket){
-      connectedUsers = removeUser(connectedUsers, socket.user.username);
-
-      io.emit(USER_DISCONNECTED, connectedUsers);
-      console.log("disconnect: ", connectedUsers);
-    }
-  });*/
-
   //Set community chat
   socket.on(COMMUNITY_CHAT, (callback) => {
     callback(communityChat);
   });
+
+  //Private message
+  socket.on(PRIVATE_MESSAGE, ({receiver, sender, activeChat}) => {
+    if(receiver in connectedUsers){
+      const receiverSocket = connectedUsers[receiver].socketId;
+
+      if(activeChat === null || activeChat.id === communityChat.id) {
+        //Create new chat
+        const newChat = createChat({messages: [], name: ` ${sender} & ${receiver}`, users: [receiver, sender]});
+        socket.to(receiverSocket).emit(PRIVATE_MESSAGE, newChat);
+        socket.emit(PRIVATE_MESSAGE, newChat);
+      }else{
+        //Add user to activeChat
+        activeChat.users.push(receiver);
+        activeChat.name = activeChat.name + ' & ' + receiver;
+        activeChat.messages = activeChat.messages;
+        activeChat.typingUsers = activeChat.typingUsers;
+        socket.to(receiverSocket).emit(PRIVATE_MESSAGE, activeChat);
+
+        for(user of activeChat.users){
+          if(user !== sender && user !== receiver){
+            const userSocket = connectedUsers[user].socketId;
+            socket.to(userSocket).emit(UPDATE_CHAT, activeChat);
+          }
+        }
+        socket.emit(UPDATE_CHAT, activeChat);
+      }
+    }
+  })
 
   //When message is sent
   socket.on(MESSAGE_SENT, ({chatId, message, sender}) => {
@@ -65,10 +88,12 @@ module.exports = function(socket){
 
   //User logout
   socket.on(LOGOUT, () => {
-    connectedUsers = removeUser(connectedUsers, socket.user.username);
+    if("user" in socket){
+      connectedUsers = removeUser(connectedUsers, socket.user.username);
 
-    io.emit(USER_DISCONNECTED, connectedUsers);
-    console.log('logout:', connectedUsers); 
+      io.emit(USER_DISCONNECTED, connectedUsers);
+      console.log('logout:', connectedUsers); 
+    }
   });
 }
 
@@ -109,10 +134,11 @@ function sendMessageToChat(chatId, message, sender){
 * @param username {String} Chosen username
 * @return user {Object} Object with user's id, username
 */
-function createUser(username){
+function createUser(username, socketId = null){
   return {
     id: uuidv4(),
-    username
+    username,
+    socketId
   }
 }
 

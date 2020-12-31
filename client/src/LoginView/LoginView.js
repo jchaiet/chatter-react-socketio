@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import useChat from '../hooks/useChat';
+
+import {
+  USER_CONNECTED,
+  VERIFY_USER,
+} from '../Events';
 
 import './LoginView.scss';
 
 const LoginView = (props) => {
-  const { handleSetUser } = props;
-  const { verifyUsername, connectUser } = useChat();
+  const { socket, handleSetUser } = props;
 
   const [error, setError] = useState(null);
   const [username, setUsername] = useState('');
@@ -14,7 +17,7 @@ const LoginView = (props) => {
     if(isUser) {
       setError('That username is taken');
     }else{
-      connectUser(user);
+      socket.emit(USER_CONNECTED, user);
       handleSetUser(user);
     }
   }
@@ -26,8 +29,7 @@ const LoginView = (props) => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-
-    verifyUsername(username, handleCheckUser)
+    socket.emit(VERIFY_USER, username, handleCheckUser);
   }
 
   return (

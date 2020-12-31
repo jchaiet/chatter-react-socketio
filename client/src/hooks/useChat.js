@@ -26,7 +26,7 @@ const useChat = () => {
     setSocket(socketRef.current);
    
     return () => {
-      socketRef.current.disconnect();
+      //socketRef.current.disconnect();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

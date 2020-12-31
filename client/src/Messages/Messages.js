@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 
 const Messages = (props) => {
-  const { messages, user, typingUsers } = props;
+  const { messages, user } = props;
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () =>{
@@ -12,7 +12,6 @@ const Messages = (props) => {
     scrollToBottom()
   }, [messages.length]);
 
-  console.log(typingUsers)
   return (
     <div className="thread__container">
       <div className="thread__content">
@@ -22,15 +21,24 @@ const Messages = (props) => {
               <div
                 key={mes.id}
                 className={`message__container ${mes.sender === user.username ? 'message__container--right' : 'message__container--left'}`}
-                style={{marginBottom: i == messages.length - 1 ?  0 : '1em'}}
+                style={{marginBottom: i === messages.length - 1 ?  0 : '1em'}}
 
               >
                 <div className="message__data">
-                  <div className="message__time">{mes.time}</div>
-                  <div className="message__content">{mes.message}</div>
                   {mes.sender !== user.username && 
-                    <div className="message__name">{mes.sender}</div>
+                    <div className="message__name--avatar">{mes.sender[0]}</div>
                   }
+                  <div className="message__content-container content">
+                    <div className="content__top">
+                      { mes.sender !== user.username && 
+                        <div className="message__name">{mes.sender}</div>
+                      } 
+                      <div className="message__time">{mes.time}</div>
+                    </div>
+                    <div className="message__content">{mes.message}</div>
+
+                  </div>
+               
                 </div>
               </div>
             )

@@ -1,28 +1,35 @@
-import React, { useEffect, useState } from 'react';
-import useChat from '../hooks/useChat';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import Sidebar from './Sidebar';
 import ChatHeading from './ChatHeading';
 import Messages from '../Messages/Messages';
 import MessageInput from '../Messages/MessageInput';
 
-import { MESSAGE_RECEIVED, MESSAGE_SENT, TYPING } from '../Events';
+import { 
+  MESSAGE_RECEIVED, 
+  MESSAGE_SENT, 
+  TYPING, 
+  PRIVATE_MESSAGE,
+  COMMUNITY_CHAT,
+  UPDATE_CHAT
+} from '../Events';
 
 import './DashboardView.scss';
 
 export default function DashboardView(props) {
-  const { socket, user, handleLogout } = props;
-  const { setCommunity } = useChat();
+  const { user, socket, handleLogout } = props;
 
-  const [chats, setChats] = useState(null);
+  const [isTypingObj, setIsTypingObj] = useState(null);
+  const [messageObj, setMessageObj] = useState(null);
+  const [chats, setChats] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
-
+  const [incomingChat, setIncomingChat] = useState(null);
   /*
   *  Returns a function that will add message to chat with 
   *  chatId passed in.
   *  @param chatId {number}
   */
-  function handleAddMessageToChat(chats, chatId, message) {
+  const handleAddMessageToChat = useCallback((chatId, message) => {
     let newChats = chats.map(chat => {
       if(chat.id === chatId) {
         chat.messages.push(message);
@@ -31,7 +38,46 @@ export default function DashboardView(props) {
     });
 
     setChats(newChats);      
-  }
+  }, [chats])
+
+  useEffect(() => {
+    if(messageObj){
+      handleAddMessageToChat(messageObj.chatId, messageObj.message);
+      return () => {}
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messageObj]);
+
+  /**
+   * Updates the typing in the specified chat
+   * @param {string} chatId 
+  */
+  const updateTypingInChat = useCallback((chatId, isTyping, sender) => {    
+    if(sender !== user.username){
+      let newChats = chats.map(chat => {
+        if(chat.id === chatId) {
+          if(isTyping && !chat.typingUsers.includes(sender)){
+            chat.typingUsers.push(sender);
+          }else if(!isTyping && chat.typingUsers.includes(sender)){
+            chat.typingUsers = chat.typingUsers.filter(u => u !== sender);
+          }
+        }
+        setActiveChat(chat);
+        return chat;
+      });
+
+      setChats(newChats);      
+    }
+  }, [chats, user.username]);
+
+  useEffect(() => {
+    if(isTypingObj){
+      updateTypingInChat(isTypingObj.chatId, isTypingObj.isTyping, isTypingObj.sender)
+      return () => {}
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isTypingObj])
 
   /*
   *  Adds chat to the chat container, if reset is true, 
@@ -43,17 +89,40 @@ export default function DashboardView(props) {
   *  only chat
   */
   function handleAddChat(chat, reset = false) {
-    const newChats = reset ? [chat] : [...chats, chat];
+    if(reset){
+      setActiveChat(chat)
+    }else{
+      setActiveChat(activeChat)
+    }
+    
+    setChats(prevChats => ([...prevChats, chat]));
 
-    setChats(newChats);
-    setActiveChat(reset ? chat : activeChat);
-
-    const messageEvent = `${MESSAGE_RECEIVED}-${chat.id}` //MESSAGE_RECEIVED-asdfjksnfsdf-sdfsfjksdf
+    const messageEvent = `${MESSAGE_RECEIVED}-${chat.id}`;
     const typingEvent = `${TYPING}-${chat.id}`;
     
-    socket.on(messageEvent, (message) => handleAddMessageToChat(newChats, chat.id, message));
-    socket.on(typingEvent, ({isTyping, sender}) => updateTypingInChat(newChats, chat.id, isTyping, sender))
+    socket.on(messageEvent, (message) => setMessageObj({chatId: chat.id, message}));
+    socket.on(typingEvent, ({isTyping, sender}) => setIsTypingObj({chatId: chat.id, isTyping, sender}));
   };
+
+  /**
+   * Update the chat attributes when new user is added
+   * @param {Chat} chat 
+  */
+
+  useEffect(() => {
+    const found = chats.some(el => el.id === incomingChat.id);
+    if(found){
+      let currentChats = [...chats];
+      const elementIdx = chats.findIndex(el => el.id === incomingChat.id);
+      currentChats[elementIdx] = {...incomingChat}
+
+      setChats(currentChats);
+      setActiveChat(incomingChat);
+    }
+    
+    return () => {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incomingChat])
 
   /**
    * Reset the chat to new incoming messages only
@@ -62,26 +131,6 @@ export default function DashboardView(props) {
   function handleResetChat(chat) {
     return handleAddChat(chat, true);
   };
-
-  /**
-   * Updates the typing in the specified chat
-   * @param {string} chatId 
-  */
-  const updateTypingInChat = (chats, chatId, isTyping, sender) => {
-    if(sender !== user.username){
-      let newChats = chats.map(chat => {
-        if(chat.id === chatId) {
-          if(isTyping && !chat.typingUsers.includes(sender)){
-            chat.typingUsers.push(sender);
-          }else if(!isTyping && chat.typingUsers.includes(sender)){
-            chat.typingUsers = chat.typingUsers.filter(u => u !== sender)
-          }
-        }
-        return chat;
-      });
-      setChats(newChats);      
-    }
-  }
 
   /*
   *  Adds a message to the specified chat
@@ -105,10 +154,19 @@ export default function DashboardView(props) {
 
   useEffect(() => {
     if(socket){
-      setCommunity(handleResetChat);
+      socket.emit(COMMUNITY_CHAT, handleResetChat);
+      socket.on(PRIVATE_MESSAGE, handleAddChat);
+      socket.on(UPDATE_CHAT, (chat) => setIncomingChat(chat) )
+      return () => { socket.off(PRIVATE_MESSAGE) }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [socket]);
+
+  function sendOpenPrivateMessage(receiver){
+    let sender = user.username;
+    
+    socket.emit(PRIVATE_MESSAGE, {receiver, sender, activeChat})
+  }
 
   return (
     <div className="chats__container">
@@ -118,6 +176,7 @@ export default function DashboardView(props) {
         user={user}
         activeChat={activeChat}
         setActiveChat={setActiveChat}
+        onSendPrivateMessage={(receiver) => sendOpenPrivateMessage(receiver)}
       />
 
       <div className="chats__chat chat">
@@ -137,7 +196,6 @@ export default function DashboardView(props) {
                     <p key={name} >{`${name} is typing...`}</p>
                   )
                 })
-
               }
             </div>
 
