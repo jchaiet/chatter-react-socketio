@@ -167,7 +167,7 @@ export default function DashboardView(props) {
     
     socket.emit(PRIVATE_MESSAGE, {receiver, sender, activeChat})
   }
-
+  
   return (
     <div className="chats__container">
       <Sidebar 
