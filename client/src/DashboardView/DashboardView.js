@@ -167,7 +167,7 @@ export default function DashboardView(props) {
     
     socket.emit(PRIVATE_MESSAGE, {receiver, sender, activeChat})
   }
-  
+
   return (
     <div className="chats__container">
       <Sidebar 
@@ -184,7 +184,7 @@ export default function DashboardView(props) {
           <div className="chat__room">
             <ChatHeading name={activeChat.name} />
             <Messages 
-              messages={activeChat.messages.reverse()} 
+              messages={activeChat.messages} 
               user={user}
               typingUsers={activeChat.typingUsers}
             />

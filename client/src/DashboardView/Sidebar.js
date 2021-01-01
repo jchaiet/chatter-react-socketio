@@ -49,17 +49,19 @@ const Sidebar = (props) => {
             <FiPlus />
           </button>
         </form>
-
-        
       </div>
 
       <div className="chats__content">
         {chats && chats.map((chat) => {
           if(chat.name){
             const lastMessage = chat.messages[chat.messages.length - 1];
-            const chatName = chat.users.find((username) => {
-              return username !== user.username
-            }) || 'Community'
+            let chatName;
+            if(chat.users.length){
+              let usersArr = chat.users.filter(u => u !== user.username);
+              chatName = usersArr.join(', ');
+            }else{
+              chatName = 'Community'
+            }
             const classNames = (activeChat && activeChat.id === chat.id ? 'active' : '');
 
             return (
@@ -73,7 +75,7 @@ const Sidebar = (props) => {
                   <p>{chatName}</p>
                   <div className="chat__last-message">
                     {lastMessage ?
-                      <p>{lastMessage.message}</p>
+                      <p>{lastMessage.sender}: {lastMessage.message}</p>
                     :
                       <p>No Messages</p>
                     }
