@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
-import Sidebar from './Sidebar';
+import Sidebar from '../Sidebar/Sidebar';
 import ChatHeading from './ChatHeading';
 import Messages from '../Messages/Messages';
 import MessageInput from '../Messages/MessageInput';
@@ -11,7 +11,9 @@ import {
   TYPING, 
   PRIVATE_MESSAGE,
   COMMUNITY_CHAT,
-  UPDATE_CHAT
+  UPDATE_CHAT,
+  USER_CONNECTED,
+  USER_DISCONNECTED
 } from '../Events';
 
 import './DashboardView.scss';
@@ -22,6 +24,7 @@ export default function DashboardView(props) {
   const [isTypingObj, setIsTypingObj] = useState(null);
   const [messageObj, setMessageObj] = useState(null);
   const [chats, setChats] = useState([]);
+  const [users, setUsers] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
   const [incomingChat, setIncomingChat] = useState(null);
   /*
@@ -110,17 +113,19 @@ export default function DashboardView(props) {
   */
 
   useEffect(() => {
-    const found = chats.some(el => el.id === incomingChat.id);
-    if(found){
-      let currentChats = [...chats];
-      const elementIdx = chats.findIndex(el => el.id === incomingChat.id);
-      currentChats[elementIdx] = {...incomingChat}
+    if(incomingChat){
+      const found = chats.some(el => el.id === incomingChat.id);
+      if(found){
+        let currentChats = [...chats];
+        const elementIdx = chats.findIndex(el => el.id === incomingChat.id);
+        currentChats[elementIdx] = {...incomingChat}
 
-      setChats(currentChats);
-      setActiveChat(incomingChat);
+        setChats(currentChats);
+        setActiveChat(incomingChat);
+      }
+      
+      return () => {}
     }
-    
-    return () => {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [incomingChat])
 
@@ -156,8 +161,19 @@ export default function DashboardView(props) {
     if(socket){
       socket.emit(COMMUNITY_CHAT, handleResetChat);
       socket.on(PRIVATE_MESSAGE, handleAddChat);
-      socket.on(UPDATE_CHAT, (chat) => setIncomingChat(chat) )
-      return () => { socket.off(PRIVATE_MESSAGE) }
+      socket.on(UPDATE_CHAT, (chat) => setIncomingChat(chat))
+      socket.on(USER_CONNECTED, (users) => {
+        let usersArr = Object.values(users);
+        setUsers(usersArr);
+      })
+      socket.on(USER_DISCONNECTED, (users) => {
+        let usersArr = Object.values(users);
+        setUsers(usersArr);
+      })
+      return () => { 
+        socket.off(PRIVATE_MESSAGE) 
+        socket.off(USER_CONNECTED)
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket]);
@@ -174,6 +190,7 @@ export default function DashboardView(props) {
         handleLogout={handleLogout}
         chats={chats}
         user={user}
+        users={users}
         activeChat={activeChat}
         setActiveChat={setActiveChat}
         onSendPrivateMessage={(receiver) => sendOpenPrivateMessage(receiver)}

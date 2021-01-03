@@ -12,6 +12,8 @@ const TYPING = "TYPING";
 const PRIVATE_MESSAGE = "PRIVATE_MESSAGE"
 const UPDATE_CHAT = "UPDATE_CHAT";
 
+const { createChat, createMessage, createUser } = require('./client/src/Factories')
+
 let connectedUsers = {};
 
 let sendMessageToChatFromUser;
@@ -20,7 +22,7 @@ let communityChat = createChat({ isCommunity: true })
 
 module.exports = function(socket){
   console.log(`Socket Id: ${socket.id}`);
-
+  
   //Verify username is not taken
   socket.on(VERIFY_USER, (username, callback) => {
     if(isUser(connectedUsers, username)){
@@ -59,18 +61,21 @@ module.exports = function(socket){
         socket.emit(PRIVATE_MESSAGE, newChat);
       }else{
         //Add user to activeChat
-        activeChat.users.push(receiver);
-        activeChat.name = activeChat.name + ' & ' + receiver;
-        activeChat.messages = activeChat.messages;
-        activeChat.typingUsers = activeChat.typingUsers;
-        socket.to(receiverSocket).emit(PRIVATE_MESSAGE, activeChat);
+        if(!activeChat.users.includes(receiver)){
+          activeChat.users.push(receiver);
+          activeChat.name = activeChat.name + ' & ' + receiver;
+          activeChat.messages = activeChat.messages;
+          activeChat.typingUsers = activeChat.typingUsers;
+          socket.to(receiverSocket).emit(PRIVATE_MESSAGE, activeChat);
 
-        for(user of activeChat.users){
-          if(user !== sender && user !== receiver){
-            const userSocket = connectedUsers[user].socketId;
-            socket.to(userSocket).emit(UPDATE_CHAT, activeChat);
+          for(user of activeChat.users){
+            if(user !== sender && user !== receiver){
+              const userSocket = connectedUsers[user].socketId;
+              socket.to(userSocket).emit(UPDATE_CHAT, activeChat);
+            }
           }
         }
+        
         socket.emit(UPDATE_CHAT, activeChat);
       }
     }
@@ -129,20 +134,6 @@ function sendMessageToChat(chatId, message, sender){
 }
 
 /*
-* createUser
-* Creates user object to be saved to list of users
-* @param username {String} Chosen username
-* @return user {Object} Object with user's id, username
-*/
-function createUser(username, socketId = null){
-  return {
-    id: uuidv4(),
-    username,
-    socketId
-  }
-}
-
-/*
 * addUser
 * Adds user from the list passed in
 * @param userList {Object} Object with key value pairs of Users
@@ -166,56 +157,4 @@ function removeUser(userList, username){
   let newList = Object.assign({}, userList);
   delete newList[username];
   return newList;
-}
-
-/*
-*  createChat
-*  Creates a messages object
-*  @prop id {string}
-*  @prop name {string}
-*  @prop messages {Array.Message} 
-*  @prop users {Array.string}
-*  @param {object}
-*    messages {Array.messages}
-*    name {string}
-*    users {Array.string}
-*/
-function createChat({messages = [], name = 'Community', users = []} = {}) {
-  return (
-    {
-      id: uuidv4(),
-      name,
-      messages,
-      users,
-      typingUsers: []
-    }
-  )
-}
-
-/*
-*  createMessage
-*  Creates a messages object
-*  @prop id {string}
-*  @prop time {Date} 24-hour format
-*  @prop message {string} message text as string
-*  @prop sender {string} sender of the message
-*  @param {object}
-*    message {string}
-*    sender {string}
-*/
-const createMessage = ({message = '', sender = ''} = {}) => (
-  {
-    id: uuidv4(),
-    time: getTime(new Date(Date.now())),
-    message,
-    sender
-  }
-)
-
-/*
-*  @param date {Date}
-*  @return a string represented in 24hr time
-*/
-function getTime(date) {
-  return `${date.getHours()}:${(('0' + date.getMinutes()).slice(-2))}`
 }
