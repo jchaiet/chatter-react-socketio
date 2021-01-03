@@ -75,7 +75,6 @@ module.exports = function(socket){
             }
           }
         }
-        
         socket.emit(UPDATE_CHAT, activeChat);
       }
     }
