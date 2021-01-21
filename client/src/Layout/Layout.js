@@ -14,8 +14,8 @@ export default function Layout() {
   const [user, setUser] = useState(null);
   const [socket, setSocket] = useState(null);
 
-  //const SOCKET_SERVER_URL = 'http://localhost:5000';
-  const SOCKET_SERVER_URL = 'https://chatter-react-socketio.herokuapp.com';
+  const SOCKET_SERVER_URL = 'http://localhost:5000';
+  //const SOCKET_SERVER_URL = 'https://chatter-react-socketio.herokuapp.com';
 
   useEffect(() => {
     //Create Websocket connection

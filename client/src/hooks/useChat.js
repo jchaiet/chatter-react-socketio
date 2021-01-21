@@ -8,8 +8,8 @@ import {
   LOGOUT
 } from '../Events';
 
-const SOCKET_SERVER_URL = 'https://chatter-react-socketio.herokuapp.com';
-//const SOCKET_SERVER_URL = 'http://localhost:5000';
+//const SOCKET_SERVER_URL = 'https://chatter-react-socketio.herokuapp.com';
+const SOCKET_SERVER_URL = 'http://localhost:5000';
 
 const useChat = () => {
   const socketRef = useRef();
